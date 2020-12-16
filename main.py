@@ -7,6 +7,7 @@ Created on Tue Dec 15 15:00:42 2020
 """
 import math
 import time
+import random
 
 
 class PathLoss:
@@ -14,8 +15,9 @@ class PathLoss:
         """
         Initializes the path loss object.
         Parameters
+        available modes are static, linear, circular or reset
         """
-        self.x1=0
+        self.x1=0#antennas coords
         self.y1=0
         #start_time = time.time()
         self.P: float = P #dota jauda
@@ -92,28 +94,33 @@ class PathLoss:
         print("The loss is %.2f dB" % self.pl)
         self.angle += self.v
         time.sleep(1)
-    def teleport(self):
-        pass
+    def teleport(self, maxdist,sleeptime):
+        self.Tx = random.randint(0,maxdist)
+        self.Ty = random.randint(0,maxdist)
+        self.calc_distance(self.x1,self.y1,self.Tx,self.Ty)
+        self.pl = 20*(math.log10(self.d))+20*(math.log10(self.fc))+92.45#gigaherz and kilometeres
+        print("The loss is %.2f dB" % self.pl)
+        time.sleep(sleeptime)
     def reset(self):
         self.__init__(self.P, self.fc,0, 0, 0, 0, 0, "reset")
 ############Vides izvelesanas
     def _calc_K(self) -> float:
         """
-        Calculates the "'medium city'/'suburban'/'open area'" correction
+        Calculates the "'City'/'Forest'/'Plains'" correction
         factor.
         Returns
         -------
         K : float
             The correction factor "K".
         """
-        if self.area_type == 'large city':
+        if self.area_type == 'city':
             K = 0.0
         elif self.area_type == 'open':
             # Value for 'open' areas
             # $K = 4.78 (\log(f))^2 - 18.33 \log(f) + 40.94$
             K = (4.78 * (math.log10(self.fc)**2) -
                  18.33 * math.log10(self.fc) + 40.94)
-        elif self.area_type == 'suburban':
+        elif self.area_type == 'forest':
             # Value for 'suburban' areas
             # $K = 2 [\log(f/28)^2] + 5.4$
             K = 2 * (math.log10(self.fc / 28.0)**2) + 5.4
@@ -122,8 +129,9 @@ class PathLoss:
         return K
     
 a = PathLoss(1000.0, 60000, 100, 100,300,100,0.1,mode = "circular")
-a.calc_loss(200, 200)
+#a.calc_loss(200, 200)
 for i in range(0,366):
     #a.lin_moving()
-    a.elip_moving()
+    #a.elip_moving()
+    a.teleport(1000, 1.0)
 a.reset()
