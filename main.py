@@ -11,10 +11,12 @@ import random
 
 
 class PathLoss:
-    def __init__(self, P: float, fc: float,mode: str,**kwargs: any):
+    def __init__(self, P: float, fc: float, Ox: int, Oy: int, mode: str,**kwargs: any):
         """
         Initializes the path loss object.
         Parameters
+        Ox:Raiditijaa atrasanas vietas x 
+        Oy:Raiditijaa atrasanas vietas y
         available modes are static, linear, circular or reset
         """
         self.area_type:str ='open'
@@ -37,8 +39,8 @@ class PathLoss:
         self.lin_mode =False
         self.circ_mode =False
         self.tel_mode =False
-        self.x1=0#antennas coords
-        self.y1=0
+        self.Ox: int = Ox
+        self.Oy: int = Oy
         #start_time = time.time()
         self.P: float = P         #dota jauda
         self.fc: float = fc       #dota frekvence
@@ -49,7 +51,7 @@ class PathLoss:
             print("Static mode with:"+' Frequency-'+str(self.fc)+"GHz"+ ", antenna coords-"+str(self.Ax)+","+str(self.Ay)+" , recording coords-"+str(self.Bx)+","+str(self.By))
             self.stst_mode =True
         elif self.mode == "linear":
-            print("linear mode")
+            print("Linear mode with:"+' Frequency-'+str(self.fc)+"GHz"+ ", walking strting coords-"+str(self.Ax)+","+str(self.Ay)+" , end coords-"+str(self.Bx)+","+str(self.By)+" , speed-"+str(self.v))
             self.lin_mode =True
             self.radians = math.atan2(self.By-self.Ay, self.Bx-self.Ax)
             self.Vy=self.v*math.cos(self.radians)
@@ -58,14 +60,14 @@ class PathLoss:
             self.newAy = self.Ay
             self.back = False
         elif self.mode == "circular":
-            print("Circular mode with:"+'Frequency-'+str(self.fc)+",distance in x-"+str(self.Bx)+",distance in y-"+str(self.By))
+            print("Circular mode with:"+'Frequency-'+str(self.fc)+",distance in x-"+str(self.Bx)+",distance in y-"+str(self.By)+" , speed-"+str(self.v))
             self.circ_mode =True
             self.angle = math.radians(90)
             self.Ex = self.Ax + self.Bx + (math.cos(self.angle))#starting coords
             self.Ey = self.Ay + self.By + (math.sin(self.angle))
         elif self.mode == "teleport":
             self.tel_mode =True
-            print("Teleport mode")
+            print("Teleport mode with:"+'Frequency-'+str(self.fc))
             
         elif self.mode == "reset":
             self.stst_mode =False
@@ -91,7 +93,7 @@ class PathLoss:
         
     def calc_loss(self):
         if self.stst_mode == True:
-            self.calc_distance(self.Ax,self.Ay,self.Bx,self.By)
+            self.calc_distance(self.Ox,self.Oy,self.Ax,self.Ay)
             self.K = self._calc_K()
             self.pl = 10*self.K*(math.log10(self.d))+20*(math.log10(self.fc))+92.45#gigaherz and kilometeres
             print("The loss is %.2f dB" % self.pl)
@@ -115,7 +117,7 @@ class PathLoss:
                 self.newAx -= self.Vx
                 self.newAy -= self.Vy
                 self.K = self._calc_K()
-                self.calc_distance(self.x1,self.y1,self.newAx,self.newAy)
+                self.calc_distance(self.Ox,self.Oy,self.newAx,self.newAy)
                 self.pl = 10*self.K*(math.log10(self.d))+20*(math.log10(self.fc))+92.45#gigaherz and kilometeres
                 print("The loss is %.2f dB" % self.pl)
                 time.sleep(1)
@@ -123,8 +125,9 @@ class PathLoss:
                 self.newAx += self.Vx
                 self.newAy += self.Vy
                 #print(self.newAx)
-                self.calc_distance(self.x1,self.y1,self.newAx,self.newAy)
-                self.pl = 20*(math.log10(self.d))+20*(math.log10(self.fc))+92.45#gigaherz and kilometeres
+                self.calc_distance(self.Ox,self.Oy,self.newAx,self.newAy)
+                self.K = self._calc_K()
+                self.pl = 10*self.K*(math.log10(self.d))+20*(math.log10(self.fc))+92.45#gigaherz and kilometeres
                 print("The loss is %.2f dB" % self.pl)
                 time.sleep(1)
         else:
@@ -174,56 +177,12 @@ class PathLoss:
         else:
             K = 2
         return K
-    def _calc_a(self) -> float:
-        """
-        Calculates the mobile antenna height correction factor.
-        This factor is strongly impacted by surrounding buildings and is
-        refined according to city sizes. For all area types, except 'large
-        city', the mobile antenna correction factor is given by
-        .. math::
-          a(h_{ms}) = (1.1 \\log(f) - 0.7) h_{ms} - 1.56 \\log(f) + 0.8
-        For the 'large city' area type, the mobile antenna height
-        correction is given by
-        .. math::
-           a(h_{ms}) = 3.2 (\\log(11.75*h_{ms})^2) - 4.97
-        if the frequency is greater then 300MHz, or
-        .. math::
-           a(h_{ms}) = 8.29 (\\log(1.54 h_{ms}))^2 - 1.10
-        if the frequency is lower than 300MHz (and greater than 150MHz
-        where the Okomura Hata model is valid).
-        Returns
-        -------
-        float
-            The mobile antenna height correction.
-        """
-        if self.area_type in ['open', 'forest', 'city']:
+
     
-            # Suburban and rural areas (f in MHz
-            # $a(h_{ms}) = (1.1 \log(f) - 0.7) h_{ms} - 1.56 \log(f) + 0.8$
-            a = ((1.1 * math.log10(self.fc) - 0.7) * self.hms -
-                 1.56 * math.log10(self.fc) + 0.8)
-        elif self.area_type == 'large city':
-            # Note: The category of "large city" used by Hata implies
-            # building heights greater than 15m.
-            if self.fc > 300:
-                # If frequency is greater then 300MHz then the factor is
-                # given by
-                # $3.2 (\log(11.75*h_{ms})^2) - 4.97$
-                a = 3.2 * (math.log10(11.75 * self.hms)**2) - 4.97
-            else:
-                # If frequency is lower then 300MHz then the factor is
-                # given by
-                # $8.29 (\log(1.54 h_{ms}))^2 - 1.10$
-                a = 8.29 * (math.log10(1.54 * self.hms)**2) - 1.10
-        else:  # pragma: no cover
-            raise RuntimeError('Invalid area type: {0}'.format(self.area_type))
-    
-        return a
-    
-a = PathLoss(1000.0, 60, Ax = 100, Ay = 100,Bx = 300, By = 100,v = 0.2,mode = "static", envo="forest")
-a.calc_loss()
-#for i in range(0,10):
- #   a.lin_moving()
- #   a.elip_moving()
+a = PathLoss(1000.0, 60, 0,0,Ax = 100, Ay = 100,Bx = 300, By = 300,v = 10,mode = "linear", envo="forest")
+#a.calc_loss()
+for i in range(0,50):
+    a.lin_moving()
+#    a.elip_moving()
     #a.teleport(1000, 1.0)
 #a.reset()
