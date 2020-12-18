@@ -9,7 +9,6 @@ import matplotlib
 matplotlib.use("TkAgg")
 import math
 import time
-import numpy as np
 import random
 from matplotlib import pyplot as plt
 
@@ -56,12 +55,35 @@ class PathLoss:
         elif self.mode == "linear":
             print("Linear mode with:"+' Frequency-'+str(self.fc)+"GHz"+ ", walking strting coords-"+str(self.Ax)+","+str(self.Ay)+" , end coords-"+str(self.Bx)+","+str(self.By)+" , speed-"+str(self.v))
             self.lin_mode =True
-            self.radians = math.atan2(abs(self.By)-self.Ay, abs(self.Bx)-self.Ax)
-            self.Vy=self.v*math.cos(self.radians)
-            self.Vx=self.v*math.sin(self.radians)
+            
+            
+            if (self.By-self.Ax >= 0 and self.Bx-self.Ax >= 0):
+                self.radians = math.atan2(self.By-self.Ax, self.Bx-self.Ax)#starada pareizi
+                self.right = True
+                self.Vy=self.v*math.cos(self.radians)
+                self.Vx=self.v*math.sin(self.radians)
+                self.back = False
+            elif self.Ax > self.Bx and self.Ay > self.By:
+                self.right = True
+                self.start = True
+                self.radians = math.pi + math.atan2(self.By-self.Ay, self.Bx-self.Ax)#strada
+                self.Vy=self.v*math.cos(self.radians)
+                self.Vx=self.v*math.sin(self.radians)
+                self.back = False
+                #print(self.Vx,self.Vy)
+            else:
+                self.right = False
+                self.radians = math.pi + math.atan2(self.By-self.Ay, self.Bx-self.Ax)#strada
+                self.Vy=self.v*math.cos(self.radians)
+                self.Vx=self.v*math.sin(self.radians)
+                self.back = False
+            print(self.radians)
+            #self.deg = math.degrees(self.radians)
+
+            print(self.Vy,self.Vx)
             self.newAx = self.Ax
             self.newAy = self.Ay
-            self.back = False
+            
         elif self.mode == "circular":
             print("Circular mode with:"+'Frequency-'+str(self.fc)+", with the centre at- "+str(self.Ax)+","+str(self.Ay)+",distance in x-"+str(self.Bx)+",distance in y-"+str(self.By)+" , speed-"+str(self.v))
             self.circ_mode =True
@@ -87,7 +109,24 @@ class PathLoss:
             raise RuntimeError(msg)
             
             
-
+    def angle_between_points(p1, p2):
+        d1 = p2[0] - p1[0]
+        d2 = p2[1] - p1[1]
+        if d1 == 0:
+            if d2 == 0:  # same points?
+                deg = 0
+            else:
+                deg = 0 if p1[1] > p2[1] else 180
+        elif d2 == 0:
+            deg = 90 if p1[0] < p2[0] else 270
+        else:
+            deg = math.atan(d2 / d1) / math.pi * 180
+            lowering = p1[1] < p2[1]
+            if (lowering and deg < 0) or (not lowering and deg > 0):
+                deg += 270
+            else:
+                deg += 90
+        return deg
     def calc_distance(self,x1,y1,x2,y2):
         self.x_dist = (x2 - x1)
         self.y_dist = (y2 - y1)
@@ -111,12 +150,26 @@ class PathLoss:
         
             #print("start of road, moving forwords")
         if self.lin_mode == True:
-            if self.newAx <= self.Ax and self.newAy <= self.Ay:
-                print("start of road, moving forwords")
-                self.back = False
-            if self.newAx >= self.Bx and self.newAy >= self.By:
-                print("end of road, moving backwords")
-                self.back = True
+            if self.right == True:
+                if self.Ax >= self.newAx and self.Ay >= self.newAy:
+                    print("start of road, moving forwords")
+                    self.start = True
+                    self.back = False
+                if self.Bx <= self.newAx and self.By <= self.newAy:
+                    print("end of road, moving backwords")
+                    self.start = False
+                    self.back = True
+
+                    
+            elif self.right == False:
+                if self.newAx >= self.Bx and self.newAy >= self.By:
+                    print("end of road, moving backwords")
+                    self.back = True             
+                elif self.Ax <= self.newAx and self.Ay <= self.newAy:
+                    print("start of road, moving forwords")
+                    self.back = False
+
+                
             if self.back == True:
                 self.newAx -= self.Vx
                 self.newAy -= self.Vy
@@ -125,7 +178,7 @@ class PathLoss:
                 self.pl = 10*self.K*(math.log10(self.d))+20*(math.log10(self.fc))+92.45#gigaherz and kilometeres
                 print("The loss is %.2f dB" % self.pl)
                 #time.sleep(1)
-            else:
+            elif self.back == False:
                 self.newAx += self.Vx
                 self.newAy += self.Vy
                 #print(self.newAx)
@@ -187,7 +240,7 @@ class PathLoss:
 
 if __name__ == "__main__":
         
-    a = PathLoss(1000.0, 60, 0,0,Ax = -100, Ay = -100,Bx = -400, By = -400,v = 10,mode = "linear", envo="forest")#nestrada ar negativiem skaitliem
+    a = PathLoss(1000.0, 60, 0,0,Ax = 100, Ay = 100,Bx = 400, By = -400,v = 10,mode = "linear", envo="forest")#nestrada ar negativiem skaitliem
     """fig = plt.figure()
     ax1 = fig.add_subplot(1, 1, 1)
     line, = ax1.plot([], lw=3)
