@@ -135,13 +135,13 @@ class PathLoss:
     def elip_moving(self):
         if self.circ_mode == True:
             self.Ex=self.Ex+self.Bx*self.v*math.cos(self.angle+(math.pi/2))
-            self.Ey=self.Ey+self.By*self.v*math.sin(self.angle+(math.pi/2))
-            self.calc_distance(self.x1,self.y1,self.Ex,self.Ey)
+            self.Ey=self.Ey-self.By*self.v*math.sin(self.angle+(math.pi/2))
+            self.calc_distance(self.Ox,self.Oy,self.Ex,self.Ey)
             self.K = self._calc_K()
             self.pl = 10*self.K*(math.log10(self.d))+20*(math.log10(self.fc))+92.45#gigaherz and kilometeres
             print("The loss is %.2f dB" % self.pl)
             self.angle += self.v
-            time.sleep(1)
+            #time.sleep(1)
         else: 
             raise RuntimeError("Circular mode not initialised")
             
