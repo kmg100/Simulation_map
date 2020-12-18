@@ -60,7 +60,7 @@ class PathLoss:
             self.newAy = self.Ay
             self.back = False
         elif self.mode == "circular":
-            print("Circular mode with:"+'Frequency-'+str(self.fc)+",distance in x-"+str(self.Bx)+",distance in y-"+str(self.By)+" , speed-"+str(self.v))
+            print("Circular mode with:"+'Frequency-'+str(self.fc)+", with the centre at- "+str(self.Ax)+","+str(self.Ay)+",distance in x-"+str(self.Bx)+",distance in y-"+str(self.By)+" , speed-"+str(self.v))
             self.circ_mode =True
             self.angle = math.radians(1)
             self.Ex = self.Ax + self.Bx + (math.cos(self.angle))#starting coords
@@ -135,7 +135,7 @@ class PathLoss:
     def elip_moving(self):
         if self.circ_mode == True:
             self.Ex=self.Ex+self.Bx*self.v*math.cos(self.angle+(math.pi/2))
-            self.Ey=self.Ey-self.By*self.v*math.sin(self.angle+(math.pi/2))
+            self.Ey=self.Ey+self.By*self.v*math.sin(self.angle+(math.pi/2))
             self.calc_distance(self.Ox,self.Oy,self.Ex,self.Ey)
             self.K = self._calc_K()
             self.pl = 10*self.K*(math.log10(self.d))+20*(math.log10(self.fc))+92.45#gigaherz and kilometeres
