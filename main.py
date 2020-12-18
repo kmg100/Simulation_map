@@ -62,9 +62,9 @@ class PathLoss:
         elif self.mode == "circular":
             print("Circular mode with:"+'Frequency-'+str(self.fc)+",distance in x-"+str(self.Bx)+",distance in y-"+str(self.By)+" , speed-"+str(self.v))
             self.circ_mode =True
-            self.angle = math.radians(90)
+            self.angle = math.radians(1)
             self.Ex = self.Ax + self.Bx + (math.cos(self.angle))#starting coords
-            self.Ey = self.Ay + self.By + (math.sin(self.angle))
+            self.Ey = self.By - self.Ay + (math.sin(self.angle))
         elif self.mode == "teleport":
             self.tel_mode =True
             print("Teleport mode with:"+'Frequency-'+str(self.fc))
