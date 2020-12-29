@@ -63,14 +63,7 @@ class PathLoss:
                 self.Vy=self.v*math.cos(self.radians)
                 self.Vx=self.v*math.sin(self.radians)
                 self.back = False
-            elif self.Ax > self.Bx and self.Ay > self.By:
-                self.right = True
-                self.start = True
-                self.radians = math.pi + math.atan2(self.By-self.Ay, self.Bx-self.Ax)#strada
-                self.Vy=self.v*math.cos(self.radians)
-                self.Vx=self.v*math.sin(self.radians)
-                self.back = False
-                #print(self.Vx,self.Vy)
+
             else:
                 self.right = False
                 self.radians = math.pi + math.atan2(self.By-self.Ay, self.Bx-self.Ax)#strada
@@ -138,7 +131,7 @@ class PathLoss:
         if self.stst_mode == True:
             self.calc_distance(self.Ox,self.Oy,self.Ax,self.Ay)
             self.K = self._calc_K()
-            self.pl = 10*self.K*(math.log10(self.d))+20*(math.log10(self.fc))+92.45#gigaherz and kilometeres
+            self.pl = 10*self.K*(math.log10(self.d))+10*self.K*(math.log10(self.fc))+92.45#gigaherz and kilometeres
             print("The loss is %.2f dB" % self.pl)
         else:
             raise RuntimeError("Static mode not initialised")
@@ -175,7 +168,7 @@ class PathLoss:
                 self.newAy -= self.Vy
                 self.K = self._calc_K()
                 self.calc_distance(self.Ox,self.Oy,self.newAx,self.newAy)
-                self.pl = 10*self.K*(math.log10(self.d))+20*(math.log10(self.fc))+92.45#gigaherz and kilometeres
+                self.pl = 10*self.K*(math.log10(self.d))+10*self.K*(math.log10(self.fc))+92.45#gigaherz and kilometeres
                 print("The loss is %.2f dB" % self.pl)
                 #time.sleep(1)
             elif self.back == False:
@@ -184,12 +177,12 @@ class PathLoss:
                 #print(self.newAx)
                 self.calc_distance(self.Ox,self.Oy,self.newAx,self.newAy)
                 self.K = self._calc_K()
-                self.pl = 10*self.K*(math.log10(self.d))+20*(math.log10(self.fc))+92.45#gigaherz and kilometeres
+                self.pl = 10*self.K*(math.log10(self.d))+10*self.K*(math.log10(self.fc))+92.45#gigaherz and kilometeres
                 print("The loss is %.2f dB" % self.pl)
                 #time.sleep(1)
         else:
             raise RuntimeError("Linear mode not initialised")
-        return self.newAx,self.newAy
+        return self.pl,self.newAx,self.newAy
             
     def elip_moving(self):
         if self.circ_mode == True:
@@ -197,13 +190,13 @@ class PathLoss:
             self.Ey=self.Ey+self.By*self.v*math.sin(self.angle+(math.pi/2))
             self.calc_distance(self.Ox,self.Oy,self.Ex,self.Ey)
             self.K = self._calc_K()
-            self.pl = 10*self.K*(math.log10(self.d))+20*(math.log10(self.fc))+92.45#gigaherz and kilometeres
+            self.pl = 10*self.K*(math.log10(self.d))+10*self.K*(math.log10(self.fc))+92.45#gigaherz and kilometeres
             print("The loss is %.2f dB" % self.pl)
             self.angle += self.v
             time.sleep(1)
         else: 
             raise RuntimeError("Circular mode not initialised")
-        return self.Ex,self.Ey
+        return self.pl,self.Ex,self.Ey
             
     def teleport(self, maxdist,sleeptime):
         if self.tel_mode == True:
@@ -211,11 +204,12 @@ class PathLoss:
             self.Ty = random.randint(0,maxdist)
             self.calc_distance(self.x1,self.y1,self.Tx,self.Ty)
             self.K = self._calc_K()
-            self.pl = 10*self.K*(math.log10(self.d))+20*(math.log10(self.fc*10**9))+92.45#gigaherz and kilometeres
+            self.pl = 10*self.K*(math.log10(self.d))+10*self.K*(math.log10(self.fc*10**9))+92.45#gigaherz and kilometeres
             print("The loss is %.2f dB" % self.pl)
             time.sleep(sleeptime)
         else: 
             raise RuntimeError("Teleport mode not initialised")
+        return self.pl
     def reset(self):
         self.__init__(self.P, self.fc,Ax = 0, Ay = 0,Bx = 0,By = 0,v =  0, mode = "reset",envo="open")
 ############Vides izvelesanas
@@ -240,7 +234,7 @@ class PathLoss:
 
 if __name__ == "__main__":
         
-    a = PathLoss(1000.0, 60, 0,0,Ax = 100, Ay = 100,Bx = 400, By = -400,v = 10,mode = "linear", envo="forest")#nestrada ar negativiem skaitliem
+    a = PathLoss(1000.0, 60, 0,0,Ax = 100, Ay = 100,Bx = 400, By = 400,v = 0.1,mode = "circular", envo="open")#nestrada ar negativiem skaitliem
     """fig = plt.figure()
     ax1 = fig.add_subplot(1, 1, 1)
     line, = ax1.plot([], lw=3)
@@ -256,10 +250,12 @@ if __name__ == "__main__":
     ax1.set_ylim(-1000, 1000)
     line, = ax1.plot([], lw=3)
     fig.canvas.draw()  
+    ax1.plot(0,0, marker="D")
+    ax1.plot(100,100, marker="D")
     plt.show(block=False)
     #plt.show()#a.calc_loss()
     for i in range(0,600):
-        ax,ay = a.lin_moving()
+        pl,ax,ay = a.elip_moving()
         x.append(ax)
         y.append(ay)
         ax1.plot(x, y, '-ok',color='black')
