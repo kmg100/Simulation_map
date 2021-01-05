@@ -57,23 +57,16 @@ class PathLoss:
             self.lin_mode =True
             
             
-            if (self.By-self.Ax >= 0 and self.Bx-self.Ax >= 0):
-                self.radians = math.atan2(self.By-self.Ax, self.Bx-self.Ax)#starada pareizi
-                self.right = True
-                self.Vx=self.v*math.cos(self.radians)
-                self.Vy=self.v*math.sin(self.radians)
-                self.back = False
-
-            else:
-                self.right = False
-                self.radians = math.pi + math.atan2(self.By-self.Ay, self.Bx-self.Ax)#strada
-                self.Vy=self.v*math.cos(self.radians)
-                self.Vx=self.v*math.sin(self.radians)
-                self.back = False
-            print(self.radians)
+            self.radians = math.atan2(self.By-self.Ax, self.Bx-self.Ax)#starada pareizi
+            
+            self.Vx=self.v*math.cos(self.radians)
+            self.Vy=self.v*math.sin(self.radians)
+            self.start = True
+            self.back = False
+            #print(self.radians)
             #self.deg = math.degrees(self.radians)
-
-            print(self.Vy,self.Vx)
+            #print(self.Vx,self.Vy)
+            #exit()
             self.newAx = self.Ax
             self.newAy = self.Ay
             
@@ -137,49 +130,62 @@ class PathLoss:
             raise RuntimeError("Static mode not initialised")
         return self.pl
     
-    def lin_moving(self):#v is speed seit ka parvietojas ar konstantu atrumu no punkta uz punktu un atpakal
+        def lin_moving(self):#v is speed seit ka parvietojas ar konstantu atrumu no punkta uz punktu un atpakal
         #when called calculate the new loss
         #if self.newAx <= self.Bx and self.newAy <= self.By and self.start == True:
-        
+        self.start_time = time.time()
             #print("start of road, moving forwords")
         if self.lin_mode == True:
-            if self.right == True:
-                if self.Ax >= self.newAx and self.Ay >= self.newAy:
-                    print("start of road, moving forwords")
-                    self.start = True
-                    self.back = False
-                if self.Bx <= self.newAx and self.By <= self.newAy:
-                    print("end of road, moving backwords")
-                    self.start = False
-                    self.back = True
-
-                    
-            elif self.right == False:
-                if self.newAx >= self.Bx and self.newAy >= self.By:
-                    print("end of road, moving backwords")
-                    self.back = True             
-                elif self.Ax <= self.newAx and self.Ay <= self.newAy:
-                    print("start of road, moving forwords")
-                    self.back = False
-
-                
-            if self.back == True:
-                self.newAx -= self.Vx
-                self.newAy -= self.Vy
-                self.K = self._calc_K()
-                self.calc_distance(self.Ox,self.Oy,self.newAx,self.newAy)
-                self.pl = 10*self.K*(math.log10(self.d))+10*self.K*(math.log10(self.fc))+92.45#gigaherz and kilometeres
-                print("The loss is %.2f dB" % self.pl)
-                #time.sleep(1)
-            elif self.back == False:
+            if self.start == True:
                 self.newAx += self.Vx
                 self.newAy += self.Vy
-                #print(self.newAx)
-                self.calc_distance(self.Ox,self.Oy,self.newAx,self.newAy)
-                self.K = self._calc_K()
-                self.pl = 10*self.K*(math.log10(self.d))+10*self.K*(math.log10(self.fc))+92.45#gigaherz and kilometeres
-                print("The loss is %.2f dB" % self.pl)
-                #time.sleep(1)
+            elif self.back == True:
+                self.newAx -= self.Vx
+                self.newAy -= self.Vy
+            #4 kvadranta lej
+            if self.Ax < self.Bx   and self.Ay > self.By :
+                if self.newAx >= self.Bx and self.newAy <= self.By and self.start == True: # y preteju prieks si
+                    print("start of road, moving forwords")
+                    self.start = False
+                    self.back = True
+                elif self.newAx <= self.Ax and self.newAy >= self.Ay and self.start == False:
+                    print("end of road, moving backwords")
+                    self.start = True
+                    self.back = False
+            #1 kvadrants
+            elif self.Ax < self.Bx  and self.Ay < self.By:
+                if self.newAx >= self.Bx and self.newAy >= self.By and self.start == True: # y preteju prieks si
+                    print("start of road, moving forwords")
+                    self.start = False
+                    self.back = True
+                elif self.newAx <= self.Ax and self.newAy <= self.Ay and self.start == False:
+                    print("end of road, moving backwords")
+                    self.start = True
+                    self.back = False
+                    #3kvadrants
+            elif self.Ax > self.Bx  and self.Ay > self.By:
+                if self.newAx <= self.Bx and self.newAy <= self.By and self.start == True: # y preteju prieks si
+                    print("start of road, moving forwords")
+                    self.start = False
+                    self.back = True
+                elif self.newAx >= self.Ax and self.newAy >= self.Ay and self.start == False:
+                    print("end of road, moving backwords")
+                    self.start = True
+                    self.back = False
+            elif self.Ax > self.Bx  and self.Ay < self.By:
+                if self.newAx <= self.Bx and self.newAy >= self.By and self.start == True: # y preteju prieks si
+                    print("start of road, moving forwords")
+                    self.start = False
+                    self.back = True
+                elif self.newAx >= self.Ax and self.newAy <= self.Ay and self.start == False:
+                    print("end of road, moving backwords")
+                    self.start = True
+                    self.back = False
+            self.calc_distance(self.Ox,self.Oy,self.newAx,self.newAy)
+            self.K = self._calc_K()
+            self.pl = 10*self.K*(math.log10(self.d))+10*self.K*(math.log10(self.fc))+92.45#gigaherz and kilometeres
+            print("The loss is %.2f dB" % self.pl)
+            time.sleep(1)
         else:
             raise RuntimeError("Linear mode not initialised")
         return self.pl,self.newAx,self.newAy
