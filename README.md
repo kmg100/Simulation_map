@@ -1,10 +1,10 @@
 ## Simulation_map
 This project works on simulating the antenna path loss depending on 4 conditions:
 
-+Static simulation
++Static simulation.
 
-+Linear movement
++Linear movement.
 
-+Eliptic movement
++Eliptic movement.
 
-+Teleprtation movement
++Teleprtation movement.
