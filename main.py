@@ -11,6 +11,7 @@ import math
 import time
 import random
 from matplotlib import pyplot as plt
+from sys import exit
 
 class PathLoss:
     def __init__(self, P: float, fc: float, Ox: int, Oy: int, mode: str,**kwargs: any):
@@ -47,12 +48,27 @@ class PathLoss:
         self.P: float = P         #dota jauda
         self.fc: float = fc       #dota frekvence
         self.mode: str = mode     #viena no cetram funkcijam
-
+        
+        ############Matplotlib variables and innit
+        self.fig = plt.figure()
+        self.ax1 = self.fig.add_subplot(1, 1, 1)
+        self.dx = []
+        self.dy = []
+        self.ax1.set_xlim(-1000, 1000)
+        self.ax1.set_ylim(-1000, 1000)
+        self.line, = self.ax1.plot([], lw=3)
+        self.ax1.plot(self.Ox,self.Oy, marker="D")
+        #self.fig.canvas.draw()  
             
         if mode == "static":
             print("Static mode with:"+' Frequency-'+str(self.fc)+"GHz"+ ", antenna coords-"+str(self.Ax)+","+str(self.Ay)+" , recording coords-"+str(self.Bx)+","+str(self.By))
             self.stst_mode =True
         elif self.mode == "linear":
+            if self.Ax ==self.Bx and self.Ay == self.By:
+                msg = ("Start and End point same value")
+                raise RuntimeError(msg)
+            #optional method of tracking movement 
+            #self.start_time = time.time()
             print("Linear mode with:"+' Frequency-'+str(self.fc)+"GHz"+ ", walking strting coords-"+str(self.Ax)+","+str(self.Ay)+" , end coords-"+str(self.Bx)+","+str(self.By)+" , speed-"+str(self.v))
             self.lin_mode =True
             
@@ -71,6 +87,10 @@ class PathLoss:
             self.newAy = self.Ay
             
         elif self.mode == "circular":
+            if self.Ax ==self.Bx and self.Ay == self.By:
+                msg = ("Start and End point same value")
+                raise RuntimeError(msg)
+            self.ax1.plot(self.Ax,self.Ay, marker="D")
             print("Circular mode with:"+'Frequency-'+str(self.fc)+", with the centre at- "+str(self.Ax)+","+str(self.Ay)+",distance in x-"+str(self.Bx)+",distance in y-"+str(self.By)+" , speed-"+str(self.v))
             self.circ_mode =True
             self.angle = math.radians(1)
@@ -89,12 +109,15 @@ class PathLoss:
             print("reset")
         else:
             raise RuntimeError("Not valid keyword")
-            
-        if self.fc < 0.0 or self.fc > 20000.0:
+        
+    
+        if self.fc < 0.0 or self.fc > 200000.0:
             msg = ("The carrier frequency is out of range")
             raise RuntimeError(msg)
+
             
             
+
     def calc_distance(self,x1,y1,x2,y2):
         self.x_dist = (x2 - x1)
         self.y_dist = (y2 - y1)
@@ -112,13 +135,16 @@ class PathLoss:
             raise RuntimeError("Static mode not initialised")
         return self.pl
     
-        def lin_moving(self):#v is speed seit ka parvietojas ar konstantu atrumu no punkta uz punktu un atpakal
+    def lin_moving(self):#v is speed seit ka parvietojas ar konstantu atrumu no punkta uz punktu un atpakal
         #when called calculate the new loss
         #if self.newAx <= self.Bx and self.newAy <= self.By and self.start == True:
-        self.start_time = time.time()
+        
             #print("start of road, moving forwords")
         if self.lin_mode == True:
             if self.start == True:
+                #Optional to have the new location every time the function is called depending on the start time not every second
+                ##self.newAx = self.Vx * (time.time()-self.start_time)
+                ##self.newAy = self.Vy * (time.time()-self.start_time)
                 self.newAx += self.Vx
                 self.newAy += self.Vy
             elif self.back == True:
@@ -144,7 +170,7 @@ class PathLoss:
                     print("end of road, moving backwords")
                     self.start = True
                     self.back = False
-                    #3kvadrants
+            #3kvadrants
             elif self.Ax > self.Bx  and self.Ay > self.By:
                 if self.newAx <= self.Bx and self.newAy <= self.By and self.start == True: # y preteju prieks si
                     print("start of road, moving forwords")
@@ -154,6 +180,7 @@ class PathLoss:
                     print("end of road, moving backwords")
                     self.start = True
                     self.back = False
+            #2 kvadrants
             elif self.Ax > self.Bx  and self.Ay < self.By:
                 if self.newAx <= self.Bx and self.newAy >= self.By and self.start == True: # y preteju prieks si
                     print("start of road, moving forwords")
@@ -170,7 +197,7 @@ class PathLoss:
             time.sleep(1)
         else:
             raise RuntimeError("Linear mode not initialised")
-        return self.pl,self.newAx,self.newAy
+        return self.pl
             
     def elip_moving(self):
         if self.circ_mode == True:
@@ -184,7 +211,7 @@ class PathLoss:
             time.sleep(1)
         else: 
             raise RuntimeError("Circular mode not initialised")
-        return self.pl,self.Ex,self.Ey
+        return self.pl
             
     def teleport(self, maxdist,sleeptime):
         if self.tel_mode == True:
@@ -219,43 +246,30 @@ class PathLoss:
         else:
             K = 2
         return K
+    def drawing(self):
+        """
+        Drawing function to check if the movement simulated is correct
+        """
+        if self.mode == "linear":
+            self.ax = self.newAx
+            self.ay = self.newAy
+        elif self.mode == "circular":
+            self.ax = self.Ex
+            self.ay = self.Ey
+        self.dx.append(self.ax)
+        self.dy.append(self.ay)
+        plt.show()
+        self.ax1.plot(self.dx, self.dy, '-ok',color='black')
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()
 
 if __name__ == "__main__":
         
-    a = PathLoss(1000.0, 60, 0,0,Ax = 100, Ay = 100,Bx = 400, By = 400,v = 0.1,mode = "circular", envo="open")#nestrada ar negativiem skaitliem
-    """fig = plt.figure()
-    ax1 = fig.add_subplot(1, 1, 1)
-    line, = ax1.plot([], lw=3)
-    fig.canvas.draw()  
-    plt.plot
-    array=[]"""
+    a = PathLoss(1000.0, 60, 0,0,Ax = 100, Ay = 100,Bx = 100, By = 500,v = 10,mode = "linear", envo="open")#nestrada ar negativiem skaitliem
     
-    fig = plt.figure()
-    ax1 = fig.add_subplot(1, 1, 1)
-    x = []
-    y = []
-    ax1.set_xlim(-1000, 1000)
-    ax1.set_ylim(-1000, 1000)
-    line, = ax1.plot([], lw=3)
-    fig.canvas.draw()  
-    ax1.plot(0,0, marker="D")
-    ax1.plot(100,100, marker="D")
-    plt.show(block=False)
-    #plt.show()#a.calc_loss()
     for i in range(0,600):
-        pl,ax,ay = a.elip_moving()
-        x.append(ax)
-        y.append(ay)
-        ax1.plot(x, y, '-ok',color='black')
-        fig.canvas.draw()
-        #plt.plot(x, y, '-ok',color='black')
-        #print(ax,ay)
-        #plt.scatter(ax,ay)#
-        fig.canvas.flush_events()
-    #print(x,y)
-    
-
-
+        pl = a.lin_moving()
+        a.drawing()
     
 #    a.elip_moving()
     #a.teleport(1000, 1.0)
