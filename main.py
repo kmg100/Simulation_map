@@ -95,24 +95,6 @@ class PathLoss:
             raise RuntimeError(msg)
             
             
-    def angle_between_points(p1, p2):
-        d1 = p2[0] - p1[0]
-        d2 = p2[1] - p1[1]
-        if d1 == 0:
-            if d2 == 0:  # same points?
-                deg = 0
-            else:
-                deg = 0 if p1[1] > p2[1] else 180
-        elif d2 == 0:
-            deg = 90 if p1[0] < p2[0] else 270
-        else:
-            deg = math.atan(d2 / d1) / math.pi * 180
-            lowering = p1[1] < p2[1]
-            if (lowering and deg < 0) or (not lowering and deg > 0):
-                deg += 270
-            else:
-                deg += 90
-        return deg
     def calc_distance(self,x1,y1,x2,y2):
         self.x_dist = (x2 - x1)
         self.y_dist = (y2 - y1)
