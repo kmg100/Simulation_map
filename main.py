@@ -14,14 +14,30 @@ from matplotlib import pyplot as plt
 from sys import exit
 
 class PathLoss:
+    """
+    Initializes the path loss object.
+    Parameters
+    P: Power of the antenna
+    fc: frequency of the antenna
+    Ox:   Raiditijaa atrasanas vietas x 
+    Oy:   Raiditijaa atrasanas vietas y
+    Mode: available modes are static, linear, circular or reset
+    -----------------------------------------------------------
+    Available arguments:
+    Ax:   Starting x coordiantes for linear movement and the center x coordiantes for elyptical movement
+    
+    Ay:   Starting y coordiantes for linear movement and the center y coordiantes for elyptical movement
+    
+    Bx:   Finishing x coordiantes for linear movement and the displacement x coordiantes for elyptical movement
+    
+    By:   Finishing y coordiantes for linear movement and the displacement y coordiantes for elyptical movement
+    
+    v:    Movement speed for linear and elyptical movement in m/s
+    
+    envo: The enviroment for the simulation, if not specified then open 
+    """
     def __init__(self, P: float, fc: float, Ox: int, Oy: int, mode: str,**kwargs: any):
-        """
-        Initializes the path loss object.
-        Parameters
-        Ox:Raiditijaa atrasanas vietas x 
-        Oy:Raiditijaa atrasanas vietas y
-        available modes are static, linear, circular or reset
-        """
+        self.v = 1 #if no speed provided 1 m/s
         self.area_type:str ='open'
         for key, value in kwargs.items(): 
             if key == "Ax":
@@ -36,7 +52,6 @@ class PathLoss:
                 self.v:float=value
             elif key == "envo": 
                 self.area_type:str = value
-
         
         self.stst_mode =False
         self.lin_mode =False
@@ -61,7 +76,8 @@ class PathLoss:
         #self.fig.canvas.draw()  
             
         if mode == "static":
-            print("Static mode with:"+' Frequency-'+str(self.fc)+"GHz"+ ", antenna coords-"+str(self.Ax)+","+str(self.Ay)+" , recording coords-"+str(self.Bx)+","+str(self.By))
+            print("Static mode with: Frequency: %.2f GHz, radiated antenna coordiantes (%3d,%3d) , Recieving antenna coordiantes: (%3d,%3d)" %(self.fc,self.Ox,self.Oy,self.Ax,self.Ay))
+            #print("Static mode with:"+' Frequency:'+str(self.fc)+"GHz"+ ", antenna coords:"+str(self.Ax)+","+str(self.Ay)+" , recording coords:"+str(self.Bx)+","+str(self.By))
             self.stst_mode =True
         elif self.mode == "linear":
             if self.Ax ==self.Bx and self.Ay == self.By:
@@ -69,20 +85,13 @@ class PathLoss:
                 raise RuntimeError(msg)
             #optional method of tracking movement 
             #self.start_time = time.time()
-            print("Linear mode with:"+' Frequency-'+str(self.fc)+"GHz"+ ", walking strting coords-"+str(self.Ax)+","+str(self.Ay)+" , end coords-"+str(self.Bx)+","+str(self.By)+" , speed-"+str(self.v))
+            print("Linear mode with: Frequency: %.2f GHz, radiated antenna coordiantes (%3d,%3d) , walking starting coordiantes: (%3d,%3d), walking end coordiantes: (%3d,%3d), the walking speed: %2f m/s" %(self.fc,self.Ox,self.Oy,self.Ax,self.Ay,self.Bx,self.By,self.v))
             self.lin_mode =True
-            
-            
             self.radians = math.atan2(self.By-self.Ax, self.Bx-self.Ax)#starada pareizi
-            
             self.Vx=self.v*math.cos(self.radians)
             self.Vy=self.v*math.sin(self.radians)
             self.start = True
             self.back = False
-            #print(self.radians)
-            #self.deg = math.degrees(self.radians)
-            #print(self.Vx,self.Vy)
-            #exit()
             self.newAx = self.Ax
             self.newAy = self.Ay
             
@@ -110,13 +119,9 @@ class PathLoss:
         else:
             raise RuntimeError("Not valid keyword")
         
-    
         if self.fc < 0.0 or self.fc > 200000.0:
             msg = ("The carrier frequency is out of range")
             raise RuntimeError(msg)
-
-            
-            
 
     def calc_distance(self,x1,y1,x2,y2):
         self.x_dist = (x2 - x1)
@@ -125,7 +130,14 @@ class PathLoss:
         return self.d
         ##calculats the distance between two antennas
         
-    def calc_loss(self):
+    def static(self):
+        """
+        Calculates the "Free space loss" for static case of the reciever antenna
+        Returns
+        -------
+        pl : float
+            path loss db value "pl".
+        """
         if self.stst_mode == True:
             self.calc_distance(self.Ox,self.Oy,self.Ax,self.Ay)
             self.K = self._calc_K()
@@ -136,10 +148,13 @@ class PathLoss:
         return self.pl
     
     def lin_moving(self):#v is speed seit ka parvietojas ar konstantu atrumu no punkta uz punktu un atpakal
-        #when called calculate the new loss
-        #if self.newAx <= self.Bx and self.newAy <= self.By and self.start == True:
-        
-            #print("start of road, moving forwords")
+        """
+        Calculates the "Free space loss" for linear movement of the reciever antenna
+        Returns
+        -------
+        pl : float
+            path loss db value "pl".
+        """
         if self.lin_mode == True:
             if self.start == True:
                 #Optional to have the new location every time the function is called depending on the start time not every second
@@ -200,6 +215,13 @@ class PathLoss:
         return self.pl
             
     def elip_moving(self):
+        """
+        Calculates the "Free space loss" for eliptical movement of the reciever antenna
+        Returns
+        -------
+        pl : float
+            path loss db value "pl".
+        """
         if self.circ_mode == True:
             self.Ex=self.Ex+self.Bx*self.v*math.cos(self.angle+(math.pi/2))
             self.Ey=self.Ey+self.By*self.v*math.sin(self.angle+(math.pi/2))
@@ -214,6 +236,17 @@ class PathLoss:
         return self.pl
             
     def teleport(self, maxdist,sleeptime):
+        """
+        Calculates the "Free space loss" for teleport movement of the reciever antenna
+        This calcualtion requires the input of:
+        maximum distance for a jump;
+        leeptime: time between the next jump
+        
+        Returns
+        -------
+        pl : float
+            path loss db value "pl".
+        """
         if self.tel_mode == True:
             self.Tx = random.randint(0,maxdist)
             self.Ty = random.randint(0,maxdist)
@@ -256,6 +289,12 @@ class PathLoss:
         elif self.mode == "circular":
             self.ax = self.Ex
             self.ay = self.Ey
+        elif self.mode == "static":
+            self.ax = self.Ax
+            self.ay = self.Ay
+        elif self.mode == "teleport":
+            self.ax = self.Ex
+            self.ay = self.Ey
         self.dx.append(self.ax)
         self.dy.append(self.ay)
         plt.show()
@@ -265,10 +304,11 @@ class PathLoss:
 
 if __name__ == "__main__":
         
-    a = PathLoss(1000.0, 60, 0,0,Ax = 100, Ay = 100,Bx = 100, By = 500,v = 10,mode = "linear", envo="open")#nestrada ar negativiem skaitliem
-    
+    a = PathLoss(1000.0, 60, 0,0,Ax = 100, Ay = 100,Bx = 100, By = 500,v = 10,mode = "static", envo="open")#nestrada ar negativiem skaitliem
+    pl = a.static()
     for i in range(0,600):
-        pl = a.lin_moving()
+        #pl = a.lin_moving()
+        #pl = a.static()
         a.drawing()
     
 #    a.elip_moving()
