@@ -60,8 +60,8 @@ class PathLoss:
             if (self.By-self.Ax >= 0 and self.Bx-self.Ax >= 0):
                 self.radians = math.atan2(self.By-self.Ax, self.Bx-self.Ax)#starada pareizi
                 self.right = True
-                self.Vy=self.v*math.cos(self.radians)
-                self.Vx=self.v*math.sin(self.radians)
+                self.Vx=self.v*math.cos(self.radians)
+                self.Vy=self.v*math.sin(self.radians)
                 self.back = False
 
             else:
