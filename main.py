@@ -16,14 +16,21 @@ from sys import exit
 class PathLoss:
     """
     Initializes the path loss object.
-    Parameters
+    -----------------------------------------------------------
+    Parameters:
+        
     P: Power of the antenna
-    fc: frequency of the antenna
-    Ox:   Raiditijaa atrasanas vietas x 
+    
+    fc: frequency of the antenna in GHz
+    
+    Ox:   Raiditijaa atrasanas vietas x
+    
     Oy:   Raiditijaa atrasanas vietas y
+    
     Mode: available modes are static, linear, circular or reset
     -----------------------------------------------------------
     Available arguments:
+        
     Ax:   Starting x coordiantes for linear movement and the center x coordiantes for elyptical movement
     
     Ay:   Starting y coordiantes for linear movement and the center y coordiantes for elyptical movement
@@ -39,6 +46,7 @@ class PathLoss:
     def __init__(self, P: float, fc: float, Ox: int, Oy: int, mode: str,**kwargs: any):
         self.v = 1 #if no speed provided 1 m/s
         self.area_type:str ='open'
+        #reading arguments
         for key, value in kwargs.items(): 
             if key == "Ax":
                 self.Ax:int=value
@@ -52,7 +60,9 @@ class PathLoss:
                 self.v:float=value
             elif key == "envo": 
                 self.area_type:str = value
-        
+            else:
+                raise RuntimeError("Wrong variable input %s" %key)
+        #defining input variables
         self.stst_mode =False
         self.lin_mode =False
         self.circ_mode =False
@@ -74,7 +84,8 @@ class PathLoss:
         self.line, = self.ax1.plot([], lw=3)
         self.ax1.plot(self.Ox,self.Oy, marker="D")
         #self.fig.canvas.draw()  
-            
+        
+        #selecting mode depending on the input
         if mode == "static":
             print("Static mode with: Frequency: %.2f GHz, radiated antenna coordiantes (%3d,%3d) , Recieving antenna coordiantes: (%3d,%3d)" %(self.fc,self.Ox,self.Oy,self.Ax,self.Ay))
             #print("Static mode with:"+' Frequency:'+str(self.fc)+"GHz"+ ", antenna coords:"+str(self.Ax)+","+str(self.Ay)+" , recording coords:"+str(self.Bx)+","+str(self.By))
@@ -119,7 +130,7 @@ class PathLoss:
         else:
             raise RuntimeError("Not valid keyword")
         
-        if self.fc < 0.0 or self.fc > 200000.0:
+        if self.fc < 0.0 or self.fc > 20000.0:
             msg = ("The carrier frequency is out of range")
             raise RuntimeError(msg)
 
@@ -304,12 +315,13 @@ class PathLoss:
 
 if __name__ == "__main__":
         
-    a = PathLoss(1000.0, 60, 0,0,Ax = 100, Ay = 100,Bx = 100, By = 500,v = 10,mode = "teleport", envo="open")#nestrada ar negativiem skaitliem
-    
+    #a = PathLoss(1000.0, 60, 0,0,Ax = 100, Ay = 100,Bx = 100, By = 500,v = 10,mode = "teleport", envo="open")#nestrada ar negativiem skaitliem
+    a = PathLoss(1000.0, 60, 0,0,Ax = 100, Ay = 100, mode="static")#nestrada ar negativiem skaitliem
+    pl = a.static()
     for i in range(0,600):
         #pl = a.lin_moving()
         #pl = a.static()
-        pl = a.teleport(1000,0.5)
+        #pl = a.teleport(1000,0.5)
         a.drawing()
     
 #    a.elip_moving()
