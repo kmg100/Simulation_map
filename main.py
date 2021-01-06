@@ -248,9 +248,9 @@ class PathLoss:
             path loss db value "pl".
         """
         if self.tel_mode == True:
-            self.Tx = random.randint(0,maxdist)
-            self.Ty = random.randint(0,maxdist)
-            self.calc_distance(self.x1,self.y1,self.Tx,self.Ty)
+            self.Tx = random.randint(-maxdist,maxdist)
+            self.Ty = random.randint(-maxdist,maxdist)
+            self.calc_distance(self.Ox,self.Oy,self.Tx,self.Ty)
             self.K = self._calc_K()
             self.pl = 10*self.K*(math.log10(self.d))+10*self.K*(math.log10(self.fc*10**9))+92.45#gigaherz and kilometeres
             print("The loss is %.2f dB" % self.pl)
@@ -293,8 +293,8 @@ class PathLoss:
             self.ax = self.Ax
             self.ay = self.Ay
         elif self.mode == "teleport":
-            self.ax = self.Ex
-            self.ay = self.Ey
+            self.ax = self.Tx
+            self.ay = self.Ty
         self.dx.append(self.ax)
         self.dy.append(self.ay)
         plt.show()
@@ -304,11 +304,12 @@ class PathLoss:
 
 if __name__ == "__main__":
         
-    a = PathLoss(1000.0, 60, 0,0,Ax = 100, Ay = 100,Bx = 100, By = 500,v = 10,mode = "static", envo="open")#nestrada ar negativiem skaitliem
-    pl = a.static()
+    a = PathLoss(1000.0, 60, 0,0,Ax = 100, Ay = 100,Bx = 100, By = 500,v = 10,mode = "teleport", envo="open")#nestrada ar negativiem skaitliem
+    
     for i in range(0,600):
         #pl = a.lin_moving()
         #pl = a.static()
+        pl = a.teleport(1000,0.5)
         a.drawing()
     
 #    a.elip_moving()
