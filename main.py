@@ -3,7 +3,8 @@
 """
 Created on Tue Dec 15 15:00:42 2020
 
-@author: kristaps
+@author: Kristaps Greitans at EDI
+This library simulates the free path loss value depending on several variables, the frequency is in GHZ and distance is in meters
 """
 import matplotlib
 matplotlib.use("TkAgg")
@@ -23,9 +24,9 @@ class PathLoss:
     
     fc: frequency of the antenna in GHz
     
-    Ox:   Raiditijaa atrasanas vietas x
+    Ox:   Raiditija atrasanas vietas x
     
-    Oy:   Raiditijaa atrasanas vietas y
+    Oy:   Raiditija atrasanas vietas y
     
     Mode: available modes are static, linear, circular or reset
     -----------------------------------------------------------
@@ -137,13 +138,14 @@ class PathLoss:
     def calc_distance(self,x1,y1,x2,y2):
         self.x_dist = (x2 - x1)
         self.y_dist = (y2 - y1)
-        self.d = math.sqrt(self.x_dist * self.x_dist + self.y_dist * self.y_dist)
+        self.d = 0.001*math.sqrt(self.x_dist * self.x_dist + self.y_dist * self.y_dist)#converts to Km for the equation
+        #print(self.d*0.001)
         return self.d
         ##calculats the distance between two antennas
         
     def static(self):
         """
-        Calculates the "Free space loss" for static case of the reciever antenna
+        Calculates the "Path space loss" for static case of the reciever antenna
         Returns
         -------
         pl : float
@@ -270,7 +272,9 @@ class PathLoss:
             raise RuntimeError("Teleport mode not initialised")
         return self.pl
     def reset(self):
-        self.__init__(self.P, self.fc,Ax = 0, Ay = 0,Bx = 0,By = 0,v =  0, mode = "reset",envo="open")
+        self.__init__(self.P, self.fc,0,0,Ax = 0, Ay = 0,Bx = 0,By = 0,v =  0, mode = "reset",envo="open")
+        plt.clf()
+        plt.close('all')
 ############Vides izvelesanas
     def _calc_K(self) -> float:
         """
@@ -308,7 +312,7 @@ class PathLoss:
             self.ay = self.Ty
         self.dx.append(self.ax)
         self.dy.append(self.ay)
-        plt.show()
+        plt.show(block=False)
         self.ax1.plot(self.dx, self.dy, '-ok',color='black')
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
@@ -316,14 +320,15 @@ class PathLoss:
 if __name__ == "__main__":
         
     #a = PathLoss(1000.0, 60, 0,0,Ax = 100, Ay = 100,Bx = 100, By = 500,v = 10,mode = "teleport", envo="open")#nestrada ar negativiem skaitliem
-    a = PathLoss(1000.0, 60, 0,0,Ax = 100, Ay = 100, mode="static")#nestrada ar negativiem skaitliem
+    a = PathLoss(10.0, 60, 0,0,Ax = 0, Ay = 500, mode="static")#nestrada ar negativiem skaitliem
     pl = a.static()
-    for i in range(0,600):
+    for i in range(0,10):
         #pl = a.lin_moving()
         #pl = a.static()
         #pl = a.teleport(1000,0.5)
         a.drawing()
-    
+    #a.reset()
+#plt.close('all')
 #    a.elip_moving()
     #a.teleport(1000, 1.0)
 #a.reset()
