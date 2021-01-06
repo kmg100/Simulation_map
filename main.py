@@ -12,7 +12,7 @@ import math
 import time
 import random
 from matplotlib import pyplot as plt
-from sys import exit
+#from sys import exit
 
 class PathLoss:
     """
@@ -24,9 +24,9 @@ class PathLoss:
     
     fc: frequency of the antenna in GHz
     
-    Ox:   Raiditija atrasanas vietas x
+    Ox:   Raiditija atrasanas vietas x metros
     
-    Oy:   Raiditija atrasanas vietas y
+    Oy:   Raiditija atrasanas vietas y metros
     
     Mode: available modes are static, linear, circular or reset
     -----------------------------------------------------------
@@ -42,7 +42,7 @@ class PathLoss:
     
     v:    Movement speed for linear and elyptical movement in m/s
     
-    envo: The enviroment for the simulation, if not specified then open 
+    envo: The enviroment for the simulation, if not specified then open (open)
     """
     def __init__(self, P: float, fc: float, Ox: int, Oy: int, mode: str,**kwargs: any):
         self.v = 1 #if no speed provided 1 m/s
@@ -272,7 +272,7 @@ class PathLoss:
             raise RuntimeError("Teleport mode not initialised")
         return self.pl
     def reset(self):
-        self.__init__(self.P, self.fc,0,0,Ax = 0, Ay = 0,Bx = 0,By = 0,v =  0, mode = "reset",envo="open")
+        self.__init__(self.P, self.fc,0,0,Ax = 0, Ay = 0,Bx = 0,By = 0,v =  0, mode = "reset")
         plt.clf()
         plt.close('all')
 ############Vides izvelesanas
@@ -320,7 +320,7 @@ class PathLoss:
 if __name__ == "__main__":
         
     #a = PathLoss(1000.0, 60, 0,0,Ax = 100, Ay = 100,Bx = 100, By = 500,v = 10,mode = "teleport", envo="open")#nestrada ar negativiem skaitliem
-    a = PathLoss(10.0, 60, 0,0,Ax = 0, Ay = 500, mode="static")#nestrada ar negativiem skaitliem
+    a = PathLoss(10.0, 10, 0,0,Ax = 0, Ay = 500, mode="static",envo="open")#nestrada ar negativiem skaitliem
     pl = a.static()
     for i in range(0,10):
         #pl = a.lin_moving()
