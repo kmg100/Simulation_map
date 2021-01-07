@@ -13,7 +13,11 @@ import numpy as np
 
 
 def CoM(image): 
-    im = Image.open(image)
+    """
+    This Function calculates the centre coordiants of a image 
+    returns cx and cy as float numbers
+    """
+    im = Image.open(image) #opens the image
     imm = im.load()
     (X, Y) = im.size
     m = np.zeros((X, Y))
@@ -28,7 +32,7 @@ def CoM(image):
     cx = np.sum(dx * np.arange(X))
     cy = np.sum(dy * np.arange(Y))
     draw = ImageDraw.Draw(im)
-    draw.text((cx, cy),text="x")
+    draw.text((cx, cy),text="x")#draws an x at the centre of the image
     im.show()
     print(cx,cy)
     return cx,cy
