@@ -99,7 +99,7 @@ class PathLoss:
             #self.start_time = time.time()
             print("Linear mode with: Frequency: %.2f GHz, radiated antenna coordiantes (%3d,%3d) , walking starting coordiantes: (%3d,%3d), walking end coordiantes: (%3d,%3d), the walking speed: %2f m/s" %(self.fc,self.Ox,self.Oy,self.Ax,self.Ay,self.Bx,self.By,self.v))
             self.lin_mode =True
-            self.radians = math.atan2(self.By-self.Ax, self.Bx-self.Ax)#starada pareizi
+            self.radians = math.atan2(self.Bx-self.Ax, self.By-self.Ay)#starada pareizi
             self.Vx=self.v*math.cos(self.radians)
             self.Vy=self.v*math.sin(self.radians)
             self.start = True
