@@ -9,4 +9,6 @@ This project works on simulating the antenna path loss depending on 4 conditions
 ## Structure
 main.py is a libary for simulating the path loss value, when distance in meters, frequency in Ghz are given.
 
-CoM.py is code for calculating the centre of mass of a contour
+CoM.py is code for calculating the centre of mass of a contour.
+
+IMU_calibration.py is calibration program for the LSM9DS0 9 axis IMU.
