@@ -21,9 +21,9 @@ print('Calibrating magnetometer X, Y, Z axis values, move slowly in figure 8 and
 start_time = time.time()
 while (time.time() < start_time + measuring_duration):
     # Read the X, Y, Z axis magnetometer and acceleration values 
-    mag = "data"#read the 3 axis values
+    mag = (600,500,700)#read the 3 axis values
     # Grab the X, Y, Z components from the reading for printing.
-    mag_x, mag_z, mag_y = mag
+    mag_x, mag_z, mag_y = (300,400,500)
     # set lowest and highest values seen so far
     running_mmin = tuple(map(lambda x, y: min(x,y), running_mmin, mag))
     running_mmax = tuple(map(lambda x, y: max(x,y), running_mmax, mag))
@@ -38,3 +38,10 @@ while (time.time() < start_time + measuring_duration):
     
     
 moffset = tuple(map(lambda x1, x2: (x1+x2) / 2., running_mmin, running_mmax))
+avg_mdelta = tuple(map(lambda x1, x2: (x2-x1)/2., running_mmin, running_mmax))
+combined_avg_mdelta = (avg_mdelta[0] + avg_mdelta[1] + avg_mdelta[2])/3.
+scale_mx = combined_avg_mdelta / avg_mdelta[0]
+scale_my = combined_avg_mdelta / avg_mdelta[1]
+scale_mz = combined_avg_mdelta / avg_mdelta[2]
+print('magnetometer offsets: ',moffset)
+print('magentometer scaling: ',scale_mx, scale_my, scale_mz)
