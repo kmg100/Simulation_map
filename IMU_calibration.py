@@ -5,9 +5,18 @@ Created on Fri Jan  8 14:21:01 2021
 
 @author: kristaps
 """
-
 import time
+ 
+import board
+import busio
+ 
+# import digitalio # Used with SPI
+import adafruit_lsm9ds0
 import math
+
+# I2C connection:
+i2c = busio.I2C(board.SCL, board.SDA)
+sensor = adafruit_lsm9ds0.LSM9DS0_I2C(i2c)
 
 #range for the values
 running_mmin = (32767, 32767, 32767)
@@ -21,9 +30,9 @@ print('Calibrating magnetometer X, Y, Z axis values, move slowly in figure 8 and
 start_time = time.time()
 while (time.time() < start_time + measuring_duration):
     # Read the X, Y, Z axis magnetometer and acceleration values 
-    mag = (600,500,700)#read the 3 axis values
+    mag = sensor.magnetic#read the 3 axis values
     # Grab the X, Y, Z components from the reading for printing.
-    mag_x, mag_z, mag_y = (300,400,500)
+    mag_x, mag_y, mag_z = sensor.magnetic
     # set lowest and highest values seen so far
     running_mmin = tuple(map(lambda x, y: min(x,y), running_mmin, mag))
     running_mmax = tuple(map(lambda x, y: max(x,y), running_mmax, mag))
